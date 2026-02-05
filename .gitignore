@@ -1,0 +1,32 @@
+# Generated data files
+data/sample/*.csv
+data/sample/*.json
+data/sample/*.parquet
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Databricks
+.databricks/
+*.dbfs
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Checkpoints
+*.checkpoint
