@@ -112,19 +112,12 @@ member_profiles_schema = StructType([
 
 # COMMAND ----------
 
-spark.conf.set("spark.sql.execution.arrow.pyspark.fallback.enabled", "true")
-
-# COMMAND ----------
-
-# DBTITLE 1,Cell 10
-import pandas as pd
-
 def ingest_to_bronze(df, table_name, source_file):
     """
     Generic function to ingest data into bronze layer with metadata
-    
+
     Args:
-        df: Source DataFrame
+        df: Source Spark DataFrame
         table_name: Target table name
         source_file: Source file name for lineage
     """
@@ -133,7 +126,7 @@ def ingest_to_bronze(df, table_name, source_file):
         .withColumn("ingestion_timestamp", F.current_timestamp())
         .withColumn("source_file", F.lit(source_file))
     )
-    
+
     # Write to Delta table
     (df_with_metadata
         .write
@@ -142,12 +135,15 @@ def ingest_to_bronze(df, table_name, source_file):
         .option("mergeSchema", "true")
         .saveAsTable(f"{CATALOG}.{BRONZE_SCHEMA}.{table_name}")
     )
-    
+
     return df_with_metadata
 
-# Read digital journeys CSV using pandas (workaround for Spark CSV reader issue with Volumes)
-digital_journeys_pdf = pd.read_csv("/Volumes/insurance_final_with_ai/default/data/digital_journeys.csv")
-digital_journeys_raw = spark.createDataFrame(digital_journeys_pdf, schema=digital_journeys_schema)
+# Read digital journeys CSV using Spark DataFrame API
+digital_journeys_raw = (spark.read
+    .option("header", "true")
+    .schema(digital_journeys_schema)
+    .csv(f"{INPUT_PATH}/digital_journeys.csv")
+)
 
 # Ingest to bronze
 digital_journeys_bronze = ingest_to_bronze(
@@ -168,9 +164,12 @@ digital_journeys_bronze.show(5, truncate=False)
 # COMMAND ----------
 
 # DBTITLE 1,Cell 12
-# Read call logs CSV using pandas (workaround for Spark CSV reader issue with Volumes)
-call_logs_pdf = pd.read_csv(f"{INPUT_PATH}/call_logs.csv")
-call_logs_raw = spark.createDataFrame(call_logs_pdf, schema=call_logs_schema)
+# Read call logs CSV using Spark DataFrame API
+call_logs_raw = (spark.read
+    .option("header", "true")
+    .schema(call_logs_schema)
+    .csv(f"{INPUT_PATH}/call_logs.csv")
+)
 
 # Ingest to bronze
 call_logs_bronze = ingest_to_bronze(
@@ -191,9 +190,12 @@ call_logs_bronze.show(5, truncate=False)
 # COMMAND ----------
 
 # DBTITLE 1,Cell 14
-# Read member profiles CSV using pandas (workaround for Spark CSV reader issue with Volumes)
-member_profiles_pdf = pd.read_csv(f"{INPUT_PATH}/member_profiles.csv")
-member_profiles_raw = spark.createDataFrame(member_profiles_pdf, schema=member_profiles_schema)
+# Read member profiles CSV using Spark DataFrame API
+member_profiles_raw = (spark.read
+    .option("header", "true")
+    .schema(member_profiles_schema)
+    .csv(f"{INPUT_PATH}/member_profiles.csv")
+)
 
 # Ingest to bronze
 member_profiles_bronze = ingest_to_bronze(
