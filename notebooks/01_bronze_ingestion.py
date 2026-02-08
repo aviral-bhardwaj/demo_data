@@ -33,7 +33,7 @@ sys.path.append("/Workspace/Repos/notebooks/config")
 # Widgets for catalog and schema configuration
 dbutils.widgets.text("catalog_name", "insurance_final_with_ai", "Catalog Name")
 dbutils.widgets.text("bronze_schema", "bronze", "Bronze Schema Name")
-dbutils.widgets.text("input_path", "/Volumes/insurance_final_with_ai/default/data", "Input Data Path")
+dbutils.widgets.text("input_path", "/Volumes/insurance_final_with_ai/default/data/inputpath", "Input Data Path")
 dbutils.widgets.text("checkpoint_path", "/Volumes/insurance_final_with_ai/default/data/checkpoints/bronze", "Checkpoint Path")
 
 # Get widget values
@@ -142,7 +142,7 @@ def ingest_to_bronze(df, table_name, source_file):
 digital_journeys_raw = (spark.read
     .option("header", "true")
     .schema(digital_journeys_schema)
-    .csv(f"{INPUT_PATH}/digital_journeys.csv")
+    .csv("/Volumes/insurance_final_with_ai/default/data/inputpath/digital_journeys.csv")
 )
 
 # Ingest to bronze

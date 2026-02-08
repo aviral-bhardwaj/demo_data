@@ -41,7 +41,7 @@ from pyspark.sql.types import *
 # COMMAND ----------
 
 # Widgets for configuration
-dbutils.widgets.text("output_path", "/Volumes/insurance_final_with_ai/default/data", "Output Path")
+dbutils.widgets.text("output_path", "/Volumes/insurance_final_with_ai/default/data/inputpath/", "Output Path")
 dbutils.widgets.text("num_members", "10000", "Number of Members")
 dbutils.widgets.text("num_digital_journeys", "50000", "Number of Digital Journeys")
 dbutils.widgets.text("num_calls", "12000", "Number of Call Logs")
@@ -605,15 +605,33 @@ call_logs_sdf.groupBy("call_reason").agg(
 
 # COMMAND ----------
 
-def save_as_csv(df, path):
-    """Save Spark DataFrame as a single CSV file to the specified path."""
-    (df
-        .coalesce(1)
-        .write
-        .mode("overwrite")
-        .option("header", "true")
-        .csv(path)
-    )
+# Convert pandas DataFrames to Spark DataFrames and save as CSV
+member_profiles_spark_df = spark.createDataFrame(member_profiles_df)
+digital_journeys_spark_df = spark.createDataFrame(digital_journeys_df)
+call_logs_spark_df = spark.createDataFrame(call_logs_df)
+
+
+# COMMAND ----------
+
+print(OUTPUT_PATH)
+
+# COMMAND ----------
+
+# For smaller datasets (< 1M rows)
+member_profiles_spark_df.toPandas().to_csv(
+    f"/Volumes/insurance_final_with_ai/default/data/inputpath/member_profiles.csv", 
+    index=False
+)
+
+digital_journeys_spark_df.toPandas().to_csv(
+    f"/Volumes/insurance_final_with_ai/default/data/inputpath/digital_journeys.csv", 
+    index=False
+)
+
+call_logs_spark_df.toPandas().to_csv(
+    f"/Volumes/insurance_final_with_ai/default/data/inputpath/call_logs.csv", 
+    index=False
+)
 
 save_as_csv(member_profiles_sdf, f"{OUTPUT_PATH}/member_profiles.csv")
 save_as_csv(digital_journeys_sdf, f"{OUTPUT_PATH}/digital_journeys.csv")
@@ -623,9 +641,9 @@ save_as_csv(call_logs_sdf, f"{OUTPUT_PATH}/call_logs.csv")
 
 print("Data saved successfully!")
 print(f"\nFiles created:")
-print(f"  - {OUTPUT_PATH}/member_profiles.csv ({member_profiles_sdf.count():,} records)")
-print(f"  - {OUTPUT_PATH}/digital_journeys.csv ({digital_journeys_sdf.count():,} records)")
-print(f"  - {OUTPUT_PATH}/call_logs.csv ({call_logs_sdf.count():,} records)")
+print(f"  - {OUTPUT_PATH}member_profiles.csv ({len(member_profiles_df):,} records)")
+print(f"  - {OUTPUT_PATH}digital_journeys.csv ({len(digital_journeys_df):,} records)")
+print(f"  - {OUTPUT_PATH}call_logs.csv ({len(call_logs_df):,} records)")
 
 # COMMAND ----------
 
