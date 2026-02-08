@@ -1,14 +1,14 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # 01 - Bronze Layer Ingestion
-# MAGIC 
+# MAGIC
 # MAGIC **Purpose**: Ingest raw data files into Bronze layer Delta tables
-# MAGIC 
+# MAGIC
 # MAGIC **Bronze Layer Philosophy**:
 # MAGIC - Minimal transformation
 # MAGIC - Preserve raw data exactly as received
 # MAGIC - Add ingestion metadata only
-# MAGIC 
+# MAGIC
 # MAGIC **Tables Created**:
 # MAGIC - `bronze.digital_journeys_raw`
 # MAGIC - `bronze.call_logs_raw`
@@ -31,10 +31,10 @@ sys.path.append("/Workspace/Repos/notebooks/config")
 # COMMAND ----------
 
 # Widgets for catalog and schema configuration
-dbutils.widgets.text("catalog_name", "main", "Catalog Name")
+dbutils.widgets.text("catalog_name", "insurance_final_with_ai", "Catalog Name")
 dbutils.widgets.text("bronze_schema", "bronze", "Bronze Schema Name")
-dbutils.widgets.text("input_path", "/dbfs/FileStore/demo_data/sample", "Input Data Path")
-dbutils.widgets.text("checkpoint_path", "/dbfs/FileStore/demo_data/checkpoints/bronze", "Checkpoint Path")
+dbutils.widgets.text("input_path", "/Volumes/insurance_final_with_ai/default/data", "Input Data Path")
+dbutils.widgets.text("checkpoint_path", "/Volumes/insurance_final_with_ai/default/data/checkpoints/bronze", "Checkpoint Path")
 
 # Get widget values
 CATALOG = dbutils.widgets.get("catalog_name")
@@ -55,11 +55,11 @@ print(f"  Checkpoint Path: {CHECKPOINT_PATH}")
 
 # COMMAND ----------
 
-# Create catalog and schema if they don't exist
-spark.sql(f"CREATE CATALOG IF NOT EXISTS {CATALOG}")
-spark.sql(f"CREATE SCHEMA IF NOT EXISTS {CATALOG}.{BRONZE_SCHEMA}")
-spark.sql(f"USE CATALOG {CATALOG}")
-spark.sql(f"USE SCHEMA {BRONZE_SCHEMA}")
+# # Create catalog and schema if they don't exist
+# spark.sql(f"CREATE CATALOG IF NOT EXISTS {CATALOG}")
+# spark.sql(f"CREATE SCHEMA IF NOT EXISTS {CATALOG}.{BRONZE_SCHEMA}")
+# spark.sql(f"USE CATALOG {CATALOG}")
+# spark.sql(f"USE SCHEMA {BRONZE_SCHEMA}")
 
 print(f"Using catalog: {CATALOG}, schema: {BRONZE_SCHEMA}")
 
@@ -112,6 +112,13 @@ member_profiles_schema = StructType([
 
 # COMMAND ----------
 
+spark.conf.set("spark.sql.execution.arrow.pyspark.fallback.enabled", "true")
+
+# COMMAND ----------
+
+# DBTITLE 1,Cell 10
+import pandas as pd
+
 def ingest_to_bronze(df, table_name, source_file):
     """
     Generic function to ingest data into bronze layer with metadata
@@ -138,14 +145,9 @@ def ingest_to_bronze(df, table_name, source_file):
     
     return df_with_metadata
 
-# Read digital journeys CSV
-digital_journeys_raw = (spark.read
-    .format("csv")
-    .option("header", "true")
-    .option("inferSchema", "true")
-    .schema(digital_journeys_schema)
-    .load(f"{INPUT_PATH}/digital_journeys.csv")
-)
+# Read digital journeys CSV using pandas (workaround for Spark CSV reader issue with Volumes)
+digital_journeys_pdf = pd.read_csv("/Volumes/insurance_final_with_ai/default/data/digital_journeys.csv")
+digital_journeys_raw = spark.createDataFrame(digital_journeys_pdf, schema=digital_journeys_schema)
 
 # Ingest to bronze
 digital_journeys_bronze = ingest_to_bronze(
@@ -165,14 +167,10 @@ digital_journeys_bronze.show(5, truncate=False)
 
 # COMMAND ----------
 
-# Read call logs CSV
-call_logs_raw = (spark.read
-    .format("csv")
-    .option("header", "true")
-    .option("inferSchema", "true")
-    .schema(call_logs_schema)
-    .load(f"{INPUT_PATH}/call_logs.csv")
-)
+# DBTITLE 1,Cell 12
+# Read call logs CSV using pandas (workaround for Spark CSV reader issue with Volumes)
+call_logs_pdf = pd.read_csv(f"{INPUT_PATH}/call_logs.csv")
+call_logs_raw = spark.createDataFrame(call_logs_pdf, schema=call_logs_schema)
 
 # Ingest to bronze
 call_logs_bronze = ingest_to_bronze(
@@ -192,14 +190,10 @@ call_logs_bronze.show(5, truncate=False)
 
 # COMMAND ----------
 
-# Read member profiles CSV
-member_profiles_raw = (spark.read
-    .format("csv")
-    .option("header", "true")
-    .option("inferSchema", "true")
-    .schema(member_profiles_schema)
-    .load(f"{INPUT_PATH}/member_profiles.csv")
-)
+# DBTITLE 1,Cell 14
+# Read member profiles CSV using pandas (workaround for Spark CSV reader issue with Volumes)
+member_profiles_pdf = pd.read_csv(f"{INPUT_PATH}/member_profiles.csv")
+member_profiles_raw = spark.createDataFrame(member_profiles_pdf, schema=member_profiles_schema)
 
 # Ingest to bronze
 member_profiles_bronze = ingest_to_bronze(

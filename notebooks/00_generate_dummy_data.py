@@ -1,14 +1,14 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # 00 - Generate Dummy Data
-# MAGIC 
+# MAGIC
 # MAGIC **Purpose**: Generate synthetic data for Digital-to-Call Leakage Detection use case
-# MAGIC 
+# MAGIC
 # MAGIC **Data Generated**:
 # MAGIC - Digital Journeys (~50,000 records)
 # MAGIC - Call Logs (~12,000 records)
 # MAGIC - Member Profiles (~10,000 records)
-# MAGIC 
+# MAGIC
 # MAGIC **Key Patterns**:
 # MAGIC - 5,000 daily billing abandon → call (MAPD New, +14% trend)
 # MAGIC - 3,000 daily ID card fail → call (Spanish, +8% trend)
@@ -42,7 +42,7 @@ from pyspark.sql.types import *
 # COMMAND ----------
 
 # Widgets for configuration
-dbutils.widgets.text("output_path", "/dbfs/FileStore/demo_data/sample", "Output Path")
+dbutils.widgets.text("output_path", "/Volumes/insurance_final_with_ai/default/data", "Output Path")
 dbutils.widgets.text("num_members", "10000", "Number of Members")
 dbutils.widgets.text("num_digital_journeys", "50000", "Number of Digital Journeys")
 dbutils.widgets.text("num_calls", "12000", "Number of Call Logs")
@@ -539,10 +539,38 @@ print(call_logs_df.groupby('call_reason')['sentiment_score'].mean())
 
 # COMMAND ----------
 
-# Save to CSV files
-member_profiles_df.to_csv(f"{OUTPUT_PATH}/member_profiles.csv", index=False)
-digital_journeys_df.to_csv(f"{OUTPUT_PATH}/digital_journeys.csv", index=False)
-call_logs_df.to_csv(f"{OUTPUT_PATH}/call_logs.csv", index=False)
+# Convert pandas DataFrames to Spark DataFrames and save as CSV
+member_profiles_spark_df = spark.createDataFrame(member_profiles_df)
+digital_journeys_spark_df = spark.createDataFrame(digital_journeys_df)
+call_logs_spark_df = spark.createDataFrame(call_logs_df)
+
+
+# COMMAND ----------
+
+print(OUTPUT_PATH)
+
+# COMMAND ----------
+
+# For smaller datasets (< 1M rows)
+member_profiles_spark_df.toPandas().to_csv(
+    f"/Volumes/insurance_final_with_ai/default/data/member_profiles.csv", 
+    index=False
+)
+
+digital_journeys_spark_df.toPandas().to_csv(
+    f"/Volumes/insurance_final_with_ai/default/data/digital_journeys.csv", 
+    index=False
+)
+
+call_logs_spark_df.toPandas().to_csv(
+    f"/Volumes/insurance_final_with_ai/default/data/call_logs.csv", 
+    index=False
+)
+
+
+# COMMAND ----------
+
+
 
 print("Data saved successfully!")
 print(f"\nFiles created:")
