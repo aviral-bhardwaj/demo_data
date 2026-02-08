@@ -42,7 +42,7 @@ from pyspark.sql.types import *
 # COMMAND ----------
 
 # Widgets for configuration
-dbutils.widgets.text("output_path", "/Volumes/insurance_final_with_ai/default/data", "Output Path")
+dbutils.widgets.text("output_path", "/Volumes/insurance_final_with_ai/default/data/inputpath/", "Output Path")
 dbutils.widgets.text("num_members", "10000", "Number of Members")
 dbutils.widgets.text("num_digital_journeys", "50000", "Number of Digital Journeys")
 dbutils.widgets.text("num_calls", "12000", "Number of Call Logs")
@@ -553,17 +553,17 @@ print(OUTPUT_PATH)
 
 # For smaller datasets (< 1M rows)
 member_profiles_spark_df.toPandas().to_csv(
-    f"/Volumes/insurance_final_with_ai/default/data/member_profiles.csv", 
+    f"/Volumes/insurance_final_with_ai/default/data/inputpath/member_profiles.csv", 
     index=False
 )
 
 digital_journeys_spark_df.toPandas().to_csv(
-    f"/Volumes/insurance_final_with_ai/default/data/digital_journeys.csv", 
+    f"/Volumes/insurance_final_with_ai/default/data/inputpath/digital_journeys.csv", 
     index=False
 )
 
 call_logs_spark_df.toPandas().to_csv(
-    f"/Volumes/insurance_final_with_ai/default/data/call_logs.csv", 
+    f"/Volumes/insurance_final_with_ai/default/data/inputpath/call_logs.csv", 
     index=False
 )
 
@@ -574,9 +574,9 @@ call_logs_spark_df.toPandas().to_csv(
 
 print("Data saved successfully!")
 print(f"\nFiles created:")
-print(f"  - {OUTPUT_PATH}/member_profiles.csv ({len(member_profiles_df):,} records)")
-print(f"  - {OUTPUT_PATH}/digital_journeys.csv ({len(digital_journeys_df):,} records)")
-print(f"  - {OUTPUT_PATH}/call_logs.csv ({len(call_logs_df):,} records)")
+print(f"  - {OUTPUT_PATH}member_profiles.csv ({len(member_profiles_df):,} records)")
+print(f"  - {OUTPUT_PATH}digital_journeys.csv ({len(digital_journeys_df):,} records)")
+print(f"  - {OUTPUT_PATH}call_logs.csv ({len(call_logs_df):,} records)")
 
 # COMMAND ----------
 
